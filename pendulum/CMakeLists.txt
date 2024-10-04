@@ -202,10 +202,6 @@ file(GLOB_RECURSE
 	./params.json
 )
 
-if(${TESTING})
-	list(REMOVE_ITEM pendulum_files "${CMAKE_CURRENT_SOURCE_DIR}/./src/Learn/render.cpp")
-endif()
-
 include_directories(${GEGELATI_INCLUDE_DIRS}  ${SDL2_INCLUDE_DIR} ${SDL2IMAGE_INCLUDE_DIR} ${SDL2TTF_INCLUDE_DIR})
 add_executable(${PROJECT_NAME} ${pendulum_files})
 target_link_libraries(${PROJECT_NAME} ${GEGELATI_LIBRARIES}  ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY})
@@ -243,10 +239,8 @@ add_dependencies(${ExecCodeGen} ${TARGET_CodeGen})
 # set target name for the executable that use the codeGen files to do an inference
 set(TARGET ${PROJECT_NAME}InferenceCodeGen)
 # create binary that need the generated file
-set(inference_codegen_files ${SRC}/mainCodeGenInference.cpp ./src/Learn/instructions.cpp ./src/Learn/pendulum.cpp ./src/Learn/render.cpp ${CODEGEN})
-if(${TESTING})
-	list(REMOVE_ITEM inference_codegen_files "./src/Learn/render.cpp")
-endif()
+set(inference_codegen_files ${SRC}/mainCodeGenInference.cpp ./src/Learn/instructions.cpp ./src/Learn/pendulum.cpp ${CODEGEN})
+
 add_executable(${TARGET} ${inference_codegen_files})
 target_link_libraries(${TARGET} ${GEGELATI_LIBRARIES} ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY})
 target_include_directories(${TARGET} BEFORE PUBLIC ${SRC_CODEGEN}) 

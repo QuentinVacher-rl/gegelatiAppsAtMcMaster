@@ -19,7 +19,10 @@ void Pendulum::setAngle(double newValue)
 
 void Pendulum::setVelocity(double newValue)
 {
-	this->currentState.setDataAt(typeid(double), 1, newValue);
+	if(velocityAvailable){
+		this->currentState.setDataAt(typeid(double), 1, newValue);
+	}
+	this->currentVelocity = newValue;
 }
 
 double Pendulum::getAngle() const
@@ -29,7 +32,10 @@ double Pendulum::getAngle() const
 
 double Pendulum::getVelocity() const
 {
-	return *this->currentState.getDataAt(typeid(const double), 1).getSharedPointer<const double>();;
+	if(velocityAvailable){
+		return *this->currentState.getDataAt(typeid(const double), 1).getSharedPointer<const double>();
+	}
+	return this->currentVelocity;
 }
 
 std::vector<std::reference_wrapper<const Data::DataHandler>> Pendulum::getDataSources()
@@ -60,7 +66,7 @@ double Pendulum::getActionFromID(const uint64_t& actionID)
 	return (actionID <= availableActions.size()) ? result : -result;
 }
 
-void Pendulum::doAction(uint64_t actionID)
+void Pendulum::doAction(double actionID)
 {
 	// Get the action
 	double currentAction = getActionFromID(actionID);

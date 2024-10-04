@@ -44,6 +44,7 @@ Thumbs.db
 **/bin/
 **/lib/
 **/dat/
+**/savedLogs/
 
 # CLion generated files
 **/.idea/
