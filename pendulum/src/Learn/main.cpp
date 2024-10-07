@@ -16,14 +16,16 @@ int main(int argc, char ** argv) {
     char option;
     uint64_t seed = 0;
     char paramFile[150];
-	bool velocity = 0;
-    strcpy(paramFile, ROOT_DIR "/params.json");
-    while((option = getopt(argc, argv, "s:p:v:")) != -1){
+	bool velocity = 1;
+	bool isContinuous = 0;
+    strcpy(paramFile, "../params_0.json");
+    while((option = getopt(argc, argv, "s:p:v:c:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
 			case 'v': velocity = atoi(optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-v velocity\'." << std::endl; exit(1);
+			case 'c': isContinuous = atoi(optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-v velocity\' \'-c isContinuous\'." << std::endl; exit(1);
         }
     }
     std::cout << "Selected seed : " << seed << std::endl;
@@ -49,7 +51,7 @@ int main(int argc, char ** argv) {
 #endif
 
 	// Instantiate the LearningEnvironment
-	Pendulum pendulumLE({ 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0 }, velocity);
+	Pendulum pendulumLE({ 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0 }, velocity, isContinuous);
 
 	std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
@@ -68,7 +70,7 @@ int main(int argc, char ** argv) {
 
     // Basic Logger
     char logPath[150];
-	sprintf(logPath, "out.%d.p%d.std", seed, indexParam);
+	sprintf(logPath, "out.%d.p%d.v%d.c%d.std", seed, indexParam, velocity, isContinuous);
 
     std::ofstream logStream;
     logStream.open(logPath);
@@ -76,12 +78,12 @@ int main(int argc, char ** argv) {
 
 	// Create an exporter for all graphs
     char dotPath[150];
-    sprintf(dotPath, "out_0000.%d.p%d.dot", seed, indexParam);
+    sprintf(dotPath, "out_0000.%d.p%d.v%d.c%d.dot", seed, indexParam, velocity, isContinuous);
 	File::TPGGraphDotExporter dotExporter(dotPath, *la.getTPGGraph());
 
 	// Logging best policy stat.
     char bestPolicyStatsPath[150];
-    sprintf(bestPolicyStatsPath, "bestPolicyStats.%d.p%d.md", seed, indexParam);
+    sprintf(bestPolicyStatsPath, "bestPolicyStats.%d.p%d.v%d.c%d.md", seed, indexParam, velocity, isContinuous);
 	std::ofstream stats;
 	stats.open(bestPolicyStatsPath);
 	Log::LAPolicyStatsLogger policyStatsLogger(la, stats);
@@ -95,8 +97,9 @@ int main(int argc, char ** argv) {
 	for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
 #define PRINT_ALL_DOT 0
 #if PRINT_ALL_DOT
-		char buff[13];
-		sprintf(buff, "out_%04d.dot", i);
+
+		char buff[150];
+		sprintf(buff, "out_%04d.%d.p%d.v%d.c%d.dot", i, seed, indexParam);
 		dotExporter.setNewFilePath(buff);
 		dotExporter.print();
 #endif
@@ -113,7 +116,7 @@ int main(int argc, char ** argv) {
 
     char bestDot[150];
 	// Export the graph
-    sprintf(bestDot, "out_best.%d.p%d.dot", seed, indexParam);
+    sprintf(bestDot, "out_best.%d.p%d.v%d.c%d.dot", seed, indexParam, velocity, isContinuous);
 	dotExporter.setNewFilePath(bestDot);
 	dotExporter.print();
 
@@ -121,7 +124,7 @@ int main(int argc, char ** argv) {
 	ps.setEnvironment(la.getTPGGraph()->getEnvironment());
 	ps.analyzePolicy(la.getBestRoot().first);
 	std::ofstream bestStats;
-    sprintf(bestPolicyStatsPath, "out_best_stats.%d.p%d.md", seed, indexParam);
+    sprintf(bestPolicyStatsPath, "out_best_stats.%d.p%d.v%d.c%d.md", seed, indexParam, velocity, isContinuous);
 	bestStats.open(bestPolicyStatsPath);
 	bestStats << ps;
 	bestStats.close();

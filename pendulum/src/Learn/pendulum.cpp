@@ -48,7 +48,11 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> Pendulum::getDataSo
 void Pendulum::reset(size_t seed, Learn::LearningMode mode, uint16_t iterationNumber, uint64_t generationNumber)
 {
 	// Create seed from seed and mode
+	
 	size_t hash_seed = Data::Hash<size_t>()(seed) ^ Data::Hash<Learn::LearningMode>()(mode);
+	if(mode == Learn::LearningMode::VALIDATION){
+		hash_seed = 6416846135168433;
+	}
 
 	// Reset the RNG
 	this->rng.setSeed(hash_seed);
@@ -66,10 +70,15 @@ double Pendulum::getActionFromID(const uint64_t& actionID)
 	return (actionID <= availableActions.size()) ? result : -result;
 }
 
-void Pendulum::doAction(double actionID)
+void Pendulum::doAction(uint64_t actionID)
 {
 	// Get the action
-	double currentAction = getActionFromID(actionID);
+	double currentAction;
+	if(isDiscreteEnvironment){
+		currentAction = getActionFromID(actionID);
+	} else {
+		currentAction = actionID;
+	}
 	currentAction *= Pendulum::MAX_TORQUE;
 
 	// Get current state
@@ -80,6 +89,7 @@ void Pendulum::doAction(double actionID)
 	double angleToUpward = fmod((angle + M_PI), (2.f * M_PI)) - M_PI;
 	double reward = -((angleToUpward * angleToUpward) + 0.1f * (velocity * velocity) + 0.001f * (currentAction * currentAction));
 
+	
 	// Store and accumulate reward
 	this->rewardHistory[this->nbActionsExecuted % REWARD_HISTORY_SIZE] = reward;
 	this->nbActionsExecuted++;
