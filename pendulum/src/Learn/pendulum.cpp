@@ -70,7 +70,7 @@ double Pendulum::getActionFromID(const uint64_t& actionID)
 	return (actionID <= availableActions.size()) ? result : -result;
 }
 
-void Pendulum::doAction(uint64_t actionID)
+void Pendulum::doAction(double actionID)
 {
 	// Get the action
 	double currentAction;

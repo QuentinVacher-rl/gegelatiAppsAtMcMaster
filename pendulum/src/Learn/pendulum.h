@@ -57,8 +57,6 @@ private:
 
 	double currentVelocity = 0;
 
-	bool isDiscreteEnvironment = true;
-
 protected:
 	/// Setter for angle state
 	void setAngle(double newValue);
@@ -74,7 +72,7 @@ public:
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
 	Pendulum(const std::vector<double>& actions, bool velocity=true, bool isContinuous=false) :
-		LearningEnvironment(actions.size() * 2 + 1, 0),// !isContinuous, 1, std::string("tanh")), // see availableActions comment.
+		LearningEnvironment(actions.size() * 2 + 1, 0, !isContinuous, 1, std::string("tanh")), // see availableActions comment.
 		availableActions{ actions },
 		velocityAvailable{velocity},
 		currentState{ (velocity) ? 2:1 }
@@ -109,7 +107,7 @@ public:
 	double getActionFromID(const uint64_t& actionID);
 
 	/// Inherited via LearningEnvironment
-	virtual void doAction(uint64_t actionID) override;
+	virtual void doAction(double actionID) override;
 
 	/// Inherited via LearningEnvironment
 	virtual bool isCopyable() const override;

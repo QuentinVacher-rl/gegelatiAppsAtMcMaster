@@ -45,6 +45,12 @@ Thumbs.db
 **/lib/
 **/dat/
 **/savedLogs/
+**/logs/
+
+# Keep params 
+pendulum/params/*
+!pendulum/params/
+!pendulum/params/params.json
 
 # CLion generated files
 **/.idea/
