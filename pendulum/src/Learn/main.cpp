@@ -19,8 +19,8 @@ int main(int argc, char ** argv) {
 	char logsFolder[150];
 	bool velocity = 1;
 	bool isContinuous = 0;
-    strcpy(paramFile, "	logs");
-    strcpy(paramFile, "	params/params_0.json");
+    strcpy(logsFolder, "logs");
+    strcpy(paramFile, "params/params_0.json");
     while((option = getopt(argc, argv, "s:p:v:c:l:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
