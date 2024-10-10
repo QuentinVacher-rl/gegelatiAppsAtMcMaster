@@ -10,6 +10,9 @@
 #include <gegelati.h>
 #include "instructions.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 /******************************************************************************/
 // MuJoCo data structures
 mjModel* m = NULL;  // MuJoCo model
@@ -25,6 +28,7 @@ bool button_middle = false;
 bool button_right = false;
 double lastx = 0;
 double lasty = 0;
+int frame_count = 0;
 
 GLFWwindow* window = 0;
 
@@ -39,7 +43,9 @@ void mouse_move(GLFWwindow* window, double xpos, double ypos);
 
 void InitVisualization(mjModel* task_m, mjData* task_d);
 
-void StepVisualization();
+void saveFrame(int width, int height, const char* filename);
+
+void StepVisualization(bool isSaveFrame, const char* filePath="");
 
 
 

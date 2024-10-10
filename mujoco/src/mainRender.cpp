@@ -112,20 +112,54 @@ void InitVisualization(mjModel* task_m, mjData* task_d) {
     std::cout << "WINDOW2:" << glfwWindowShouldClose(window) << std::endl;
 }
 
-void StepVisualization() {
-    // get framebuffer viewport
+void StepVisualization(bool isRenderVideoSaved, const char* filePath) {
+    // Get framebuffer viewport
     mjrRect viewport = {0, 0, 0, 0};
     glfwGetFramebufferSize(window, &viewport.width, &viewport.height);
 
-    // update scene and render
+    // Update scene and render
     mjv_updateScene(m, d, &opt, NULL, &cam, mjCAT_ALL, &scn);
     mjr_render(viewport, &scn, &con);
 
-    // swap OpenGL buffers (blocking call due to v-sync)
+    if(isRenderVideoSaved){
+        // Save the current frame
+        char filename[256];
+        sprintf(filename, "%s/frame_%04d.png", filePath, frame_count);
+        saveFrame(viewport.width, viewport.height, filename);
+        frame_count++;
+    }
+
+
+    // Swap OpenGL buffers (blocking call due to v-sync)
     glfwSwapBuffers(window);
 
-    // process pending GUI events, call GLFW callbacks
+    // Process pending GUI events, call GLFW callbacks
     glfwPollEvents();
+}
+
+void saveFrame(int width, int height, const char* filename) {
+    // Allocate memory to store the pixels
+    unsigned char* pixels = (unsigned char*)malloc(3 * width * height);
+    if (!pixels) {
+        std::cerr << "Failed to allocate memory for image capture." << std::endl;
+        return;
+    }
+
+    // Read pixels from the OpenGL framebuffer
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+    // Flip the image vertically (OpenGL's origin is bottom-left)
+    for (int y = 0; y < height / 2; ++y) {
+        for (int x = 0; x < width * 3; ++x) {
+            std::swap(pixels[y * width * 3 + x], pixels[(height - 1 - y) * width * 3 + x]);
+        }
+    }
+
+    // Save the image using stb_image_write
+    stbi_write_png(filename, width, height, 3, pixels, width * 3);
+
+    // Free the allocated memory
+    free(pixels);
 }
 
 int main(int argc, char ** argv) {
@@ -133,16 +167,21 @@ int main(int argc, char ** argv) {
     char option;
 	char dotPath[150];
     char paramFile[150];
+    bool isRenderVideoSaved = false;
+    char pathRenderVideo[150];
     uint64_t seed=0;
     
     strcpy(dotPath, "logs/out_best.0.p0.v1.c0.dot");
     strcpy(paramFile, "params/params_0.json");
-    while((option = getopt(argc, argv, "s:p:d:")) != -1){
+    strcpy(pathRenderVideo, "../logs/render");
+    while((option = getopt(argc, argv, "s:p:d:f:g:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
             case 'd': strcpy(dotPath, optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\'." << std::endl; exit(1);
+            case 'g': strcpy(pathRenderVideo, optarg); break;
+            case 'f': isRenderVideoSaved= atoi(optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' ." << std::endl; exit(1);
         }
     }
 
@@ -175,7 +214,7 @@ int main(int argc, char ** argv) {
     mujocoAntLE.reset(seed, Learn::LearningMode::TESTING);
 
     InitVisualization(mujocoAntLE.m_, mujocoAntLE.d_);
-    StepVisualization();
+    StepVisualization(isRenderVideoSaved, pathRenderVideo);
 
 
     uint64_t nbActions = 0;
@@ -189,9 +228,26 @@ int main(int argc, char ** argv) {
         mujocoAntLE.doActions(actionsID);
         // Count actions
         nbActions++;
-        StepVisualization();
+        StepVisualization(isRenderVideoSaved, pathRenderVideo);
 
     }
+
+    if(isRenderVideoSaved){
+        // Change size of images and save
+        std::string resizeCommand = "ffmpeg -i " + std::string(pathRenderVideo) + "/frame_%04d.png -vf \"scale=1200:844\" " + std::string(pathRenderVideo) + "/resized_frame_%04d.png";
+        std::cout << "Executing: " << resizeCommand << std::endl;
+        int resizeResult = system(resizeCommand.c_str());
+
+        std::string videoCommand = "ffmpeg -y -r 60 -f image2 -s 1200:844 -i " + std::string(pathRenderVideo) + "/resized_frame_%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p " + std::string(pathRenderVideo) + "/output_video.mp4";
+        std::cout << "Executing: " << videoCommand << std::endl;
+        int videoResult = system(videoCommand.c_str());
+
+        std::string cleanupCommand = "rm " + std::string(pathRenderVideo) + "/frame_*.png " + std::string(pathRenderVideo) + "/resized_frame_*.png";
+        std::cout << "Executing: " << cleanupCommand << std::endl;
+        int cleanupResult = system(cleanupCommand.c_str());
+    }
+
+
 
     // cleanup
 	for (unsigned int i = 0; i < set.getNbInstructions(); i++) {

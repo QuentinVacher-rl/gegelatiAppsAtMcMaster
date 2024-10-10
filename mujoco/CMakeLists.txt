@@ -14,7 +14,7 @@ set (RENDER_NAME renderMujoco)
 
 project(${PROJECT_NAME})
 
-option( TESTING "Is the program compiled for tests only (without display)." OFF)
+option( RENDERING "Is the program compiled will render (with display)." ON)
 
 # Add definition for relative path into project
 add_definitions( -DPROJECT_ROOT_PATH="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -70,10 +70,15 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/mujoco/include)
 # Spécifier le chemin vers les bibliothèques MuJoCo
 link_directories(${CMAKE_SOURCE_DIR}/lib/mujoco/bin)
 
-find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
+if(${RENDERING})
+	MESSAGE("Render mode")
+	find_package(OpenGL REQUIRED)
+	
+	find_package(X11 REQUIRED)
+endif()
 
-find_package(X11 REQUIRED)  # Ajoutez cette ligne
+
 
 # *******************************************
 # ************** Executable  ****************
@@ -97,33 +102,49 @@ add_executable(${PROJECT_NAME} ${mujoco_files})
 target_link_libraries(${PROJECT_NAME} ${GEGELATI_LIBRARIES}  ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY} mujoco210 ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
+if(${RENDERING})
 
-list(REMOVE_ITEM
-	mujoco_files
-	${CMAKE_SOURCE_DIR}/src/main.cpp)
+	list(REMOVE_ITEM
+		mujoco_files
+		${CMAKE_SOURCE_DIR}/src/main.cpp)
 
 
-list(APPEND
-	mujoco_files
-	${CMAKE_SOURCE_DIR}/src/mainRender.cpp
-	${CMAKE_SOURCE_DIR}/src/mainRender.h)
+	# Liste des fichiers source
+	list(APPEND mujoco_files
+		${CMAKE_SOURCE_DIR}/src/mainRender.cpp
+		${CMAKE_SOURCE_DIR}/src/mainRender.h
+		${CMAKE_SOURCE_DIR}/lib/stb_image_write.h
+	)
 
-include_directories(${GEGELATI_INCLUDE_DIRS}  ${SDL2_INCLUDE_DIR} ${SDL2IMAGE_INCLUDE_DIR} ${SDL2TTF_INCLUDE_DIR} mujoco210 glfw3)
-add_executable(${RENDER_NAME} ${mujoco_files})
-target_link_libraries(${RENDER_NAME} 
-    mujoco210 
-    glfw3 
-    ${GLEW_LIBRARIES} 
-    ${OPENGL_LIBRARIES} 
-    ${GEGELATI_LIBRARIES}  
-    ${SDL2_LIBRARY} 
-    ${SDL2IMAGE_LIBRARY} 
-    ${SDL2TTF_LIBRARY} 
-    X11 
-    Xrandr 
-    Xxf86vm
-    Xinerama
-    Xcursor
-)
-target_compile_definitions(${RENDER_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+	# Inclusion des répertoires
+	include_directories(${GEGELATI_INCLUDE_DIRS}  
+						${SDL2_INCLUDE_DIR} 
+						${SDL2IMAGE_INCLUDE_DIR} 
+						${SDL2TTF_INCLUDE_DIR} 
+						mujoco210 
+						glfw3 
+						${CMAKE_SOURCE_DIR}/lib)  # Assurez-vous que le dossier lib est inclus
 
+	# Création de l'exécutable
+	add_executable(${RENDER_NAME} ${mujoco_files})
+
+	# Lien des bibliothèques
+	target_link_libraries(${RENDER_NAME} 
+		mujoco210 
+		glfw3 
+		${GLEW_LIBRARIES} 
+		${OPENGL_LIBRARIES} 
+		${GEGELATI_LIBRARIES}  
+		${SDL2_LIBRARY} 
+		${SDL2IMAGE_LIBRARY} 
+		${SDL2TTF_LIBRARY} 
+		X11 
+		Xrandr 
+		Xxf86vm
+		Xinerama
+		Xcursor
+	)
+
+	# Définition d'une macro avec le répertoire racine du projet
+	target_compile_definitions(${RENDER_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+endif()

@@ -3,7 +3,6 @@
 
 #include <gegelati.h>
 #include <mujoco.h>
-#include <GLFW/glfw3.h>
 
 /**
 * \brief Inverted pendulum LearningEnvironment.
@@ -58,57 +57,13 @@ public:
     int frame_skip_ = 1;  // Number of frames per simlation step
     int obs_size_;  // Number of variables in observation vector
 
-    void initialize_simulation() {
-        // Load and compile model
-        char error[1000] = "Could not load binary model";
-        m_ = mj_loadXML(model_path_.c_str(), 0, error, 1000);
-        if (!m_) {
-            mju_error(("Load model error: %s", error));
-        }
-        // Make data
-        d_ = mj_makeData(m_);
+    void initialize_simulation();
 
-        std::copy_n(d_->qpos, m_->nq, back_inserter(init_qpos_));
-        std::copy_n(d_->qvel, m_->nv, back_inserter(init_qvel_));
-    }
+    void set_state(std::vector<double>& qpos, std::vector<double>& qvel);
 
-    void set_state(std::vector<double>& qpos, std::vector<double>& qvel) {
-        // Set the joints position qpos and velocity qvel of the model.
-        // Note: `qpos` and `qvel` is not the full physics state for all mujoco
-        // models/environments
-        // https://mujoco.readthedocs.io/en/stable/APIreference/APItypes.html#mjtstate
+	void computeState();
 
-        for (int i = 0; i < m_->nq; i++) d_->qpos[i] = qpos[i];
-        for (int i = 0; i < m_->nv; i++) d_->qvel[i] = qvel[i];
-        mj_forward(m_, d_);
-    }
-
-	void computeState(){
-		int index = 0;
-        for (int i = 0; i < m_->nq; i++) 
-		{
-        	currentState.setDataAt(typeid(double), index, d_->qpos[i]);
-			index++;
-		}
-        for (int i = 0; i < m_->nv; i++) 
-		{
-        	currentState.setDataAt(typeid(double), index, d_->qvel[i]);
-			index++;
-		}
-	}
-
-    void do_simulation(std::vector<double>& ctrl, int n_frames) {
-        for (int i = 0; i < m_->nu; i++) {
-            d_->ctrl[i] = ctrl[i];
-        }
-        for (int i = 0; i < n_frames; i++) {
-            mj_step(m_, d_);
-        }
-        // As of MuJoCo 2.0, force - related quantities like cacc are not
-        // computed unless there's a force sensor in the model. See https:
-        // // github.com/openai/gym/issues/1541
-        mj_rnePostConstraint(m_, d_);
-    }
+    void do_simulation(std::vector<double>& ctrl, int n_frames);
 
 };
 
