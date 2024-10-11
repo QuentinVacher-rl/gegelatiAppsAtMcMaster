@@ -64,10 +64,10 @@ public:
 		initialize_simulation();
     }
 
-    /*~MujocoAntWrapper() {
+    ~MujocoAntWrapper() {
         // Free visualization storage
-        mjv_freeScene(&scn_);
-        mjr_freeContext(&con_);
+        //mjv_freeScene(&scn_);
+        //mjr_freeContext(&con_);
 
         // Free MuJoCo model and data
         mj_deleteData(d_);
@@ -77,7 +77,7 @@ public:
 #if defined(__APPLE__) || defined(_WIN32)
         glfwTerminate();
 #endif
-    }*/
+    }
 
 	/// Inherited via LearningEnvironment
 	virtual void reset(size_t seed = 0, Learn::LearningMode mode = Learn::LearningMode::TRAINING,
