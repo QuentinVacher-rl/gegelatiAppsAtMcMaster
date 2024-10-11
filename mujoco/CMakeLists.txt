@@ -31,6 +31,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Set Release as default build type if not specified
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
+endif()
+
+
 if(NOT ${CMAKE_GENERATOR} MATCHES "Visual Studio.*")
 
 	# Link with pthread
@@ -57,7 +63,18 @@ endif()
 # *********** GEGELATI LIBRARY **************
 # *******************************************
 
-find_package(GEGELATI)
+# Set the module path to find GEGELATI
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/gegelati/bin/")
+set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/lib/gegelati/bin" ${CMAKE_PREFIX_PATH})
+find_package(GEGELATI REQUIRED)
+
+# Include and link GEGELATI
+if(GEGELATI_FOUND)
+    message(STATUS "GEGELATI version ${GEGELATI_VERSION} found.")
+    include_directories(${GEGELATI_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "GEGELATI not found!")
+endif()
 
 # *******************************************
 # ************ MUJOCO LIBRARY ***************
