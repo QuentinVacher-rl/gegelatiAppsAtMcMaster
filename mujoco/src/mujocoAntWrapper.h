@@ -24,6 +24,8 @@ protected:
 	/// Number of actions since the last reset
 	uint64_t nbActionsExecuted = 0;
 
+	const std::string xmlFile;
+
 public:
 
     // Parameters
@@ -43,10 +45,10 @@ public:
 	*
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
-	MujocoAntWrapper(std::string actFunc) :
-		MujocoWrapper(8, 29, actFunc) 
+	MujocoAntWrapper(std::string actFunc, const char *pXmlFile) :
+		MujocoWrapper(8, 29, actFunc), xmlFile{pXmlFile} 
 		{
-			model_path_ = ExpandEnvVars("../mujoco_models/ant.xml");
+			model_path_ = ExpandEnvVars(xmlFile);
 			healthy_z_range_ = {0.2, 1.0};
 			contact_force_range_ = {-1.0, 1.0};
 			initialize_simulation();
@@ -58,7 +60,7 @@ public:
     */ 
     MujocoAntWrapper(const MujocoAntWrapper &other) : MujocoWrapper(other)
 	{   
-		model_path_ = ExpandEnvVars("../mujoco_models/ant.xml");
+		model_path_ = ExpandEnvVars(other.xmlFile);
 		healthy_z_range_ = {0.2, 1.0};
 		contact_force_range_ = {-1.0, 1.0};
 		initialize_simulation();

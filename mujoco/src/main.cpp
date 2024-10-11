@@ -18,14 +18,17 @@ int main(int argc, char ** argv) {
     uint64_t seed = 0;
     char paramFile[150];
 	char logsFolder[150];
+	char xmlFile[150];
     strcpy(logsFolder, "logs");
     strcpy(paramFile, "params/params_0.json");
-    while((option = getopt(argc, argv, "s:p:v:c:l:")) != -1){
+    strcpy(xmlFile, "mujoco_models/ant.xml");
+    while((option = getopt(argc, argv, "s:p:l:x:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
             case 'l': strcpy(logsFolder, optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-logs logs Folder\'  \'-v velocity\' \'-c isContinuous\'." << std::endl; exit(1);
+            case 'x': strcpy(xmlFile, optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-logs logs Folder\'  \'-x xmlFile\'." << std::endl; exit(1);
         }
     }
     std::cout << "Selected seed : " << seed << std::endl;
@@ -48,15 +51,13 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::loadParametersFromJson(paramFile, params);
 
 	// Instantiate the LearningEnvironment
-	MujocoAntWrapper mujocoAntLE(std::string("none"));
+	MujocoAntWrapper mujocoAntLE(std::string("none"), xmlFile);
 
 	std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
 	// Instantiate and init the learning agent
 	Learn::ParallelLearningAgent la(mujocoAntLE, set, params);
 	la.init(seed);
-
-	const TPG::TPGVertex* bestRoot = NULL;
 
 
 	std::atomic<bool> exitProgram = false; // (set to false by other thread) 
@@ -95,7 +96,7 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::writeParametersToJson(jsonFilePath, params);
 
 	// Train for params.nbGenerations generations
-	for (int i = 0; i < params.nbGenerations && !exitProgram; i++) {
+	for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
 #define PRINT_ALL_DOT 0
 #if PRINT_ALL_DOT
 

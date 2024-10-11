@@ -17,7 +17,9 @@ void MujocoWrapper::initialize_simulation() {
 	char error[1000] = "Could not load binary model";
 	m_ = mj_loadXML(model_path_.c_str(), 0, error, 1000);
 	if (!m_) {
-		mju_error(("Load model error: %s", error));
+		char formattedError[256];
+		sprintf(formattedError, "Load model error: %s", error);
+		mju_error(formattedError);
 	}
 	// Make data
 	d_ = mj_makeData(m_);

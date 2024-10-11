@@ -169,19 +169,22 @@ int main(int argc, char ** argv) {
     char paramFile[150];
     bool isRenderVideoSaved = false;
     char pathRenderVideo[150];
+	char xmlFile[150];
     uint64_t seed=0;
     
     strcpy(dotPath, "logs/out_best.0.p0.v1.c0.dot");
     strcpy(paramFile, "params/params_0.json");
     strcpy(pathRenderVideo, "../logs/render");
-    while((option = getopt(argc, argv, "s:p:d:f:g:")) != -1){
+    strcpy(xmlFile, "mujoco_models/ant.xml");
+    while((option = getopt(argc, argv, "s:p:d:f:g:x:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
             case 'd': strcpy(dotPath, optarg); break;
             case 'g': strcpy(pathRenderVideo, optarg); break;
             case 'f': isRenderVideoSaved= atoi(optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' ." << std::endl; exit(1);
+            case 'x': strcpy(xmlFile, optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\'." << std::endl; exit(1);
         }
     }
 
@@ -198,7 +201,7 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::loadParametersFromJson(paramFile, params);
 
 	// Instantiate the LearningEnvironment
-	MujocoAntWrapper mujocoAntLE(std::string("none"));
+	MujocoAntWrapper mujocoAntLE(std::string("none"), xmlFile);
 
 	// Instantiate and init the learning agent
 	Learn::LearningAgent la(mujocoAntLE, set, params);
@@ -236,15 +239,24 @@ int main(int argc, char ** argv) {
         // Change size of images and save
         std::string resizeCommand = "ffmpeg -i " + std::string(pathRenderVideo) + "/frame_%04d.png -vf \"scale=1200:844\" " + std::string(pathRenderVideo) + "/resized_frame_%04d.png";
         std::cout << "Executing: " << resizeCommand << std::endl;
-        int resizeResult = system(resizeCommand.c_str());
+        int result = system(resizeCommand.c_str());
+        if (result != 0) {
+            std::cerr << "Error executing resize command: " << result << std::endl;
+        }
 
         std::string videoCommand = "ffmpeg -y -r 60 -f image2 -s 1200:844 -i " + std::string(pathRenderVideo) + "/resized_frame_%04d.png -vcodec libx264 -crf 25 -pix_fmt yuv420p " + std::string(pathRenderVideo) + "/output_video.mp4";
         std::cout << "Executing: " << videoCommand << std::endl;
-        int videoResult = system(videoCommand.c_str());
+        result = system(videoCommand.c_str());
+        if (result != 0) {
+            std::cerr << "Error executing video generation command: " << result << std::endl;
+        }
 
         std::string cleanupCommand = "rm " + std::string(pathRenderVideo) + "/frame_*.png " + std::string(pathRenderVideo) + "/resized_frame_*.png";
         std::cout << "Executing: " << cleanupCommand << std::endl;
-        int cleanupResult = system(cleanupCommand.c_str());
+        result = system(cleanupCommand.c_str());
+        if (result != 0) {
+            std::cerr << "Error executing cleanup command: " << result << std::endl;
+        }
     }
 
 
