@@ -97,13 +97,15 @@ int main(int argc, char ** argv) {
 
 	// Train for params.nbGenerations generations
 	for (uint64_t i = 0; i < params.nbGenerations && !exitProgram; i++) {
-#define PRINT_ALL_DOT 0
+#define PRINT_ALL_DOT 1
 #if PRINT_ALL_DOT
+		if(i % 100 == 0){
+			char buff[250];
+			sprintf(buff, "%s/out_%04d.%" PRIu64 ".p%d.dot", logsFolder, (int)i, seed, indexParam);
+			dotExporter.setNewFilePath(buff);
+			dotExporter.print();
+		}
 
-		char buff[250];
-		sprintf(buff, "%s/out_%04d.%" PRIu64 ".p%d.dot", logsFolder, seed, indexParam);
-		dotExporter.setNewFilePath(buff);
-		dotExporter.print();
 #endif
 
 

@@ -204,13 +204,33 @@ int main(int argc, char ** argv) {
 	MujocoAntWrapper mujocoAntLE(std::string("none"), xmlFile);
 
 	// Instantiate and init the learning agent
-	Learn::LearningAgent la(mujocoAntLE, set, params);
+	Learn::ParallelLearningAgent la(mujocoAntLE, set, params);
 	la.init(seed);
 
     auto &tpg = *la.getTPGGraph();
     Environment env(set, mujocoAntLE.getDataSources(), params.nbRegisters, params.nbProgramConstant, params.useMemoryRegisters);
     File::TPGGraphDotImporter dotImporter(dotPath, env, tpg);
     dotImporter.importGraph();
+
+    if(tpg.getNbRootVertices() > 1){
+        
+        std::cout<<"Multiple roots identified. One generation training launched to identified the best root"<<std::endl;
+        // Basic logger
+        Log::LABasicLogger basicLogger(la);
+		la.trainOneGeneration(0);
+        // Keep best policy
+        la.keepBestPolicy();
+
+
+        char bestDot[250];
+        // Export the graph    
+        strncpy(bestDot, dotPath, strstr(dotPath, ".dot") - dotPath);
+        strcat(bestDot, ".best.dot");
+	    File::TPGGraphDotExporter dotExporter(bestDot, *la.getTPGGraph());
+        dotExporter.print();
+        std::cout<<"Save best root in "<<bestDot<<std::endl;
+
+    }
 
     TPG::TPGExecutionEngine tee(env, NULL, false, 8);
 

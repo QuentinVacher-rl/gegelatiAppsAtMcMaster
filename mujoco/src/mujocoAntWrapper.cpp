@@ -26,8 +26,8 @@ void MujocoAntWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t ite
 	for (size_t i = 0; i < qvel.size(); i++) {
 		qvel[i] = init_qvel_[i] + this->rng.getDouble(0.0, reset_noise_scale_);
 	}
-	set_state(qpos, qvel);
 	mj_resetData(m_, d_);
+	set_state(qpos, qvel);
 	this->computeState();
 	this->nbActionsExecuted = 0;
 	this->totalReward = 0.0;
