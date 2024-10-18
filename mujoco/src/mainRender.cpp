@@ -209,6 +209,7 @@ int main(int argc, char ** argv) {
 
     auto &tpg = *la.getTPGGraph();
     Environment env(set, mujocoAntLE.getDataSources(), params.nbRegisters, params.nbProgramConstant, params.useMemoryRegisters);
+    
     File::TPGGraphDotImporter dotImporter(dotPath, env, tpg);
     dotImporter.importGraph();
 
@@ -234,7 +235,7 @@ int main(int argc, char ** argv) {
 
     TPG::TPGExecutionEngine tee(env, NULL, false, 8);
 
-    mujocoAntLE.reset(seed, Learn::LearningMode::TESTING);
+    mujocoAntLE.reset(seed, Learn::LearningMode::VALIDATION);
 
     InitVisualization(mujocoAntLE.m_, mujocoAntLE.d_);
     StepVisualization(isRenderVideoSaved, pathRenderVideo);
