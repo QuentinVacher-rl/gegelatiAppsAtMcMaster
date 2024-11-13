@@ -11,7 +11,7 @@ void MujocoAntWrapper::reset(size_t seed, Learn::LearningMode mode, uint16_t ite
 	// Create seed from seed and mode
 	size_t hash_seed = Data::Hash<size_t>()(seed) ^ Data::Hash<Learn::LearningMode>()(mode);
 	if(mode == Learn::LearningMode::VALIDATION){
-		hash_seed = 6416846135168433;
+		hash_seed = 6416846135168433+iterationNumber;
 	}
 
 	// Reset the RNG
@@ -40,7 +40,11 @@ void MujocoAntWrapper::doActions(std::vector<double> actionsID)
 	auto x_pos_after = d_->qpos[0];
 	auto x_vel = (x_pos_after - x_pos_before) / m_->opt.timestep;
 	auto forward_reward = x_vel;
-	auto rewards = forward_reward + healthy_reward();
+	auto rewards = forward_reward;
+	
+	if(use_healthy_reward){
+		rewards += healthy_reward();
+	};
 	auto ctrl_cost = control_cost(actionsID);
 	auto costs = ctrl_cost;
 	if (use_contact_forces_) {

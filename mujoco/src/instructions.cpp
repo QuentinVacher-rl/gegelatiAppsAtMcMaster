@@ -15,6 +15,7 @@ void fillInstructionSet(Instructions::Set& set) {
 	auto sin = [](double a) -> double { return std::sin(a); };
 	auto tan = [](double a) -> double { return std::tan(a); };
 	auto pi = [](double a) -> double { return M_PI; };
+	auto modulo = [](double a, double b) -> double { return  fmod(a, b);};
 	//auto multByConst = [](double a, Data::Constant c) -> double { return a * (double)c / 10.0; };
 
 	set.add(*(new Instructions::LambdaInstruction<double, double>(minus, "$0 = $1 - $2;")));
@@ -30,4 +31,5 @@ void fillInstructionSet(Instructions::Set& set) {
 	//set.add(*(new Instructions::LambdaInstruction<double, Data::Constant>(multByConst,
 	//	"$0 = $1 * ((double)($2) / 10.0);")));
 	set.add(*(new Instructions::LambdaInstruction<double>(pi, "$0 = M_PI;")));
+	set.add(*(new Instructions::LambdaInstruction<double, double>(modulo)));
 }

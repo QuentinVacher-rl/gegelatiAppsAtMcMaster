@@ -171,12 +171,14 @@ int main(int argc, char ** argv) {
     char pathRenderVideo[150];
 	char xmlFile[150];
     uint64_t seed=0;
+	bool useHealthyReward = 1;
+	bool useContactForce = 0;
     
-    strcpy(dotPath, "logs/out_best.0.p0.v1.c0.dot");
+    strcpy(dotPath, "logs/out_best.0.p0.dot");
     strcpy(paramFile, "params/params_0.json");
     strcpy(pathRenderVideo, "../logs/render");
     strcpy(xmlFile, "mujoco_models/ant.xml");
-    while((option = getopt(argc, argv, "s:p:d:f:g:x:")) != -1){
+    while((option = getopt(argc, argv, "s:p:d:f:g:x:h:c:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
@@ -184,7 +186,9 @@ int main(int argc, char ** argv) {
             case 'g': strcpy(pathRenderVideo, optarg); break;
             case 'f': isRenderVideoSaved= atoi(optarg); break;
             case 'x': strcpy(xmlFile, optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\'." << std::endl; exit(1);
+			case 'h': useHealthyReward = atoi(optarg); break;
+			case 'c': useContactForce = atoi(optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
 
@@ -201,14 +205,14 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::loadParametersFromJson(paramFile, params);
 
 	// Instantiate the LearningEnvironment
-	MujocoAntWrapper mujocoAntLE(std::string("none"), xmlFile);
+	MujocoAntWrapper mujocoAntLE(xmlFile, useHealthyReward, useContactForce);
 
 	// Instantiate and init the learning agent
 	Learn::ParallelLearningAgent la(mujocoAntLE, set, params);
 	la.init(seed);
 
     auto &tpg = *la.getTPGGraph();
-    Environment env(set, mujocoAntLE.getDataSources(), params.nbRegisters, params.nbProgramConstant, params.useMemoryRegisters);
+    Environment env(set, params, mujocoAntLE.getDataSources(), mujocoAntLE.getNbContinuousAction());
     
     File::TPGGraphDotImporter dotImporter(dotPath, env, tpg);
     dotImporter.importGraph();
@@ -233,7 +237,7 @@ int main(int argc, char ** argv) {
 
     }
 
-    TPG::TPGExecutionEngine tee(env, NULL, false, 8);
+    TPG::TPGExecutionEngine tee(env, NULL);
 
     mujocoAntLE.reset(seed, Learn::LearningMode::VALIDATION);
 
@@ -245,9 +249,7 @@ int main(int argc, char ** argv) {
     while (!mujocoAntLE.isTerminal() && nbActions < params.maxNbActionsPerEval) {
         // Get the actions
         std::vector<double> actionsID =
-            tee.executeFromRoot(*tpg.getRootVertices()[0], mujocoAntLE.getInitActions(),
-                                1,
-                                mujocoAntLE.getActivationFunction()).second;
+            tee.executeFromRoot(*tpg.getRootVertices()[0]).second;
         // Do it
         mujocoAntLE.doActions(actionsID);
         // Count actions

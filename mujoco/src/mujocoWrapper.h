@@ -25,8 +25,8 @@ public:
 	*
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
-	MujocoWrapper(uint64_t nbActions, uint64_t stateSize, std::string actFunc) :
-		LearningEnvironment(nbActions, 0, false, nbActions, actFunc),
+	MujocoWrapper(uint64_t nbActions, uint64_t stateSize) :
+		LearningEnvironment(nbActions, 0, false, nbActions),
 		currentState{ stateSize }
 	{};
 
@@ -35,7 +35,7 @@ public:
 	*
 	* Default copy constructor since all attributes are trivially copyable.
 	*/
-	MujocoWrapper(const MujocoWrapper& other) : LearningEnvironment(other.nbContinuousAction, 0, false, other.nbContinuousAction, other.activationFunction),
+	MujocoWrapper(const MujocoWrapper& other) : LearningEnvironment(other.nbContinuousAction, 0, false, other.nbContinuousAction),
 		currentState{other.currentState} {}
 	
 

@@ -16,19 +16,23 @@ int main(int argc, char ** argv) {
 
     char option;
     uint64_t seed = 0;
-    char paramFile[150];
+    char paramFile[1500];
 	char logsFolder[150];
 	char xmlFile[150];
+	bool useHealthyReward = 1;
+	bool useContactForce = 0;
     strcpy(logsFolder, "logs");
     strcpy(paramFile, "params/params_0.json");
     strcpy(xmlFile, "mujoco_models/ant.xml");
-    while((option = getopt(argc, argv, "s:p:l:x:")) != -1){
+    while((option = getopt(argc, argv, "s:p:l:x:h:c:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
             case 'l': strcpy(logsFolder, optarg); break;
             case 'x': strcpy(xmlFile, optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-logs logs Folder\'  \'-x xmlFile\'." << std::endl; exit(1);
+			case 'h': useHealthyReward = atoi(optarg); break;
+			case 'c': useContactForce = atoi(optarg); break;
+            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-logs logs Folder\'  \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
     std::cout << "Selected seed : " << seed << std::endl;
@@ -51,7 +55,7 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::loadParametersFromJson(paramFile, params);
 
 	// Instantiate the LearningEnvironment
-	MujocoAntWrapper mujocoAntLE(std::string("none"), xmlFile);
+	MujocoAntWrapper mujocoAntLE(xmlFile, useHealthyReward, useContactForce);
 
 	std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
@@ -76,7 +80,7 @@ int main(int argc, char ** argv) {
     Log::LABasicLogger log(la, logStream);
 
 	// Create an exporter for all graphs
-    char dotPath[250];
+    char dotPath[400];
     sprintf(dotPath, "%s/out_0000.%" PRIu64 ".p%d.dot", logsFolder, seed, indexParam);
 	File::TPGGraphDotExporter dotExporter(dotPath, *la.getTPGGraph());
 

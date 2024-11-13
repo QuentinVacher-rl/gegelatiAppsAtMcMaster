@@ -30,7 +30,8 @@ public:
 
     // Parameters
     double control_cost_weight_ = 0.5;
-    bool use_contact_forces_ = false;
+	bool use_healthy_reward;
+    bool use_contact_forces_;
     double contact_cost_weight_ = 5e-4;
     double healthy_reward_ = 1.0;
     bool terminate_when_unhealthy_ = true;
@@ -45,8 +46,8 @@ public:
 	*
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
-	MujocoAntWrapper(std::string actFunc, const char *pXmlFile) :
-		MujocoWrapper(8, 29, actFunc), xmlFile{pXmlFile} 
+	MujocoAntWrapper(const char *pXmlFile, bool useHealthyReward=true, bool useContactForce=false) :
+		MujocoWrapper(8, 29), xmlFile{pXmlFile}, use_healthy_reward{useHealthyReward}, use_contact_forces_{useContactForce}
 		{
 			model_path_ = ExpandEnvVars(xmlFile);
 			healthy_z_range_ = {0.2, 1.0};
@@ -58,7 +59,7 @@ public:
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    MujocoAntWrapper(const MujocoAntWrapper &other) : MujocoWrapper(other)
+    MujocoAntWrapper(const MujocoAntWrapper &other) : MujocoWrapper(other), use_healthy_reward{other.use_healthy_reward}, use_contact_forces_{other.use_contact_forces_}
 	{   
 		model_path_ = ExpandEnvVars(other.xmlFile);
 		healthy_z_range_ = {0.2, 1.0};
