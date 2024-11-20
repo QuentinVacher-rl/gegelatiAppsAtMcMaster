@@ -58,6 +58,8 @@ void MujocoAntWrapper::doActions(std::vector<double> actionsID)
 	this->totalReward += reward;
 
 	this->nbActionsExecuted = 0;
+
+
 }
 
 bool MujocoAntWrapper::isCopyable() const

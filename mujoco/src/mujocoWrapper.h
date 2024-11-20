@@ -61,7 +61,7 @@ public:
 
     void set_state(std::vector<double>& qpos, std::vector<double>& qvel);
 
-	void computeState();
+	virtual void computeState();
 
     void do_simulation(std::vector<double>& ctrl, int n_frames);
 
