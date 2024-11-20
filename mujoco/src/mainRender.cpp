@@ -225,7 +225,7 @@ int main(int argc, char ** argv) {
 	}
 
 	// Instantiate and init the learning agent
-	Learn::ParallelLearningAgent la(&mujocoLE, set, params);
+	Learn::ParallelLearningAgent la(*mujocoLE, set, params);
 	la.init(seed);
 
     auto &tpg = *la.getTPGGraph();

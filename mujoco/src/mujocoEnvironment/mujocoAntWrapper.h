@@ -2,7 +2,7 @@
 #define MUJOCOANTWRAPPER_H
 
 #include <gegelati.h>
-#include "mujocoWrapper.h"
+#include "../mujocoWrapper.h"
 
 /**
 * \brief Inverted pendulum LearningEnvironment.

@@ -106,6 +106,8 @@ file(GLOB_RECURSE
 	mujoco_files
 	${CMAKE_SOURCE_DIR}/src/*.cpp
 	${CMAKE_SOURCE_DIR}/src/*.h
+	${CMAKE_SOURCE_DIR}/src/mujocoEnvironment/*.cpp
+	${CMAKE_SOURCE_DIR}/src/mujocoEnvironment/*.h
 	${CMAKE_SOURCE_DIR}/params/params_0.json
 )
 

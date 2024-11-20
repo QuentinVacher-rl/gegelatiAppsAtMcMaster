@@ -2,11 +2,10 @@
 #define MUJOCOHUMANOIDWRAPPER_H
 
 #include <gegelati.h>
-#include "mujocoWrapper.h"
+#include "../mujocoWrapper.h"
 
 class MujocoHumanoidWrapper : public MujocoWrapper
 {
-protected:
 protected:
     Mutator::RNG rng;
     double totalReward = 0.0;
@@ -26,15 +25,16 @@ public:
     double reset_noise_scale_ = 1e-2;
     bool exclude_current_positions_from_observation_;
 
+    // Constructeur
     MujocoHumanoidWrapper(const char *pXmlFile, 
                           bool useHealthyReward = true, 
                           bool useContactForce = false,
-                          bool exclude_current_positions_from_observation = false) :
-        MujocoWrapper(17, exclude_current_positions_from_observation ? 376 : 378),
+                          bool excludeCurrentPositionsFromObservation = false) :
         xmlFile{pXmlFile},
         use_healthy_reward{useHealthyReward},
         use_contact_forces_{useContactForce},
-        exclude_current_positions_from_observation_{exclude_current_positions_from_observation}
+        exclude_current_positions_from_observation_{excludeCurrentPositionsFromObservation},
+        MujocoWrapper(17, excludeCurrentPositionsFromObservation ? 376 : 378)
     {
         model_path_ = ExpandEnvVars(xmlFile);
         initialize_simulation();

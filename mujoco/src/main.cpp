@@ -9,8 +9,8 @@
 #define _USE_MATH_DEFINES // To get M_PI
 #include <math.h>
 
-#include "mujocoAntWrapper.h"
-#include "mujocoHumanoidWrapper.h"
+#include "mujocoEnvironment/mujocoAntWrapper.h"
+#include "mujocoEnvironment/mujocoHumanoidWrapper.h"
 #include "instructions.h"
 
 int main(int argc, char ** argv) {

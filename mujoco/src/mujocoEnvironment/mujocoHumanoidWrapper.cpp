@@ -57,7 +57,6 @@ void MujocoHumanoidWrapper::doActions(std::vector<double> actionsID)
     // Record the center of mass position after the action and compute the velocity
     auto com_after = massCenter();
     auto x_velocity = (com_after[0] - com_before[0]) / m_->opt.timestep;
-    auto y_velocity = (com_after[1] - com_before[1]) / m_->opt.timestep;
 
     // Calculate the control cost (penalizes large action magnitudes)
     auto ctrl_cost = control_cost(actionsID);
@@ -77,9 +76,6 @@ void MujocoHumanoidWrapper::doActions(std::vector<double> actionsID)
 
     // Update the state after executing the action
     this->computeState();
-
-    // Set termination condition
-    bool terminated = isTerminal();
 
     // Increment the total reward and the count of executed actions
     this->totalReward += reward;
