@@ -1,10 +1,10 @@
-#ifndef MUJOCO_ANT_WRAPPER_H
-#define MUJOCO_ANT_WRAPPER_H
+#ifndef MUJOCO_REACHER_WRAPPER_H
+#define MUJOCO_REACHER_WRAPPER_H
 
 #include <gegelati.h>
 #include "mujocoWrapper.h"
 
-class MujocoAntWrapper : public MujocoWrapper
+class MujocoReacherWrapper : public MujocoWrapper
 {
 protected:
 
@@ -22,16 +22,10 @@ protected:
 public:
 
     // Parameters
-    double control_cost_weight_ = 0.5;
-	bool use_healthy_reward;
-    bool use_contact_forces_;
-    double contact_cost_weight_ = 5e-4;
-    double healthy_reward_ = 1.0;
-    bool terminate_when_unhealthy_ = true;
-    std::vector<double> healthy_z_range_;
-    std::vector<double> contact_force_range_;
-    double reset_noise_scale_ = 0.1;
-    bool exclude_current_positions_from_observation_ = false;
+	double reward_distance_weight = 1.0;
+	double reward_control_weight = 0.1;
+	double reset_noise_scale_pos = -0.1;
+	double reset_noise_scale_vel = -0.005;
 
 
 	/**
@@ -39,12 +33,10 @@ public:
 	*
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
-	MujocoAntWrapper(const char *pXmlFile, bool useHealthyReward=true, bool useContactForce=false) :
-		MujocoWrapper(8, (exclude_current_positions_from_observation_) ? 27:29), xmlFile{pXmlFile}, use_healthy_reward{useHealthyReward}, use_contact_forces_{useContactForce}
+	MujocoReacherWrapper(const char *pXmlFile) :
+		MujocoWrapper(2, 10), xmlFile{pXmlFile}
 		{
 			model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
-			healthy_z_range_ = {0.2, 1.0};
-			contact_force_range_ = {-1.0, 1.0};
 			initialize_simulation();
 
 		};
@@ -52,15 +44,13 @@ public:
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    MujocoAntWrapper(const MujocoAntWrapper &other) : MujocoWrapper(other), use_healthy_reward{other.use_healthy_reward}, use_contact_forces_{other.use_contact_forces_}
+    MujocoReacherWrapper(const MujocoReacherWrapper &other) : MujocoWrapper(other)
 	{   
 		model_path_ = MujocoWrapper::ExpandEnvVars(other.xmlFile);
-		healthy_z_range_ = {0.2, 1.0};
-		contact_force_range_ = {-1.0, 1.0};
 		initialize_simulation();
     }
 
-    ~MujocoAntWrapper() {
+    ~MujocoReacherWrapper() {
         // Free visualization storage
         //mjv_freeScene(&scn_);
         //mjr_freeContext(&con_);
@@ -119,18 +109,11 @@ public:
 	*/
 	virtual bool isTerminal() const override;
 
-
-    double healthy_reward();
+	void computeState();
 
     double control_cost(std::vector<double>& action);
 
-    std::vector<double> contact_forces();
-
-	void computeState();
-
-    double contact_cost();
-
-    bool is_healthy() const;
+	std::string ExpandEnvVars(const std::string &str);
 
 
 };

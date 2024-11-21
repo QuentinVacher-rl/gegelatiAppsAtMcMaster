@@ -6,8 +6,7 @@
 #include <mujoco.h>
 
 
-#include "mujocoEnvironment/mujocoAntWrapper.h"
-#include "mujocoEnvironment/mujocoHumanoidWrapper.h"
+#include "mujocoEnvironment/mujocoWrappers.h"
 #include <gegelati.h>
 #include "instructions.h"
 

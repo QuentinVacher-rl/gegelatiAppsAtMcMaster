@@ -82,10 +82,6 @@ void MujocoHumanoidWrapper::doActions(std::vector<double> actionsID)
     this->nbActionsExecuted++;
 
 
-    /*for(int i = 0; i < 378; i++){
-        std::cout<<*currentState.getDataAt(typeid(double), i)
-                        .getSharedPointer<const double>()<<"-";
-    }std::cout<<std::endl;*/
 }
 
 
@@ -139,39 +135,6 @@ bool MujocoHumanoidWrapper::is_healthy() const {
     for (int i = 0; i < m_->nq; i++) if (!std::isfinite(d_->qpos[i])) return false;
     for (int i = 0; i < m_->nv; i++) if (!std::isfinite(d_->qvel[i])) return false;
     return (d_->qpos[2] >= healthy_z_range_[0] && d_->qpos[2] <= healthy_z_range_[1]);
-}
-
-std::string MujocoHumanoidWrapper::ExpandEnvVars(const std::string &str) {
-    std::string result;
-    size_t pos = 0;
-
-    while (pos < str.length()) {
-        if (str[pos] == '$') {
-            size_t start = pos + 1;
-            size_t end = start;
-
-            if (start < str.length() && str[start] == '{') {
-                end = str.find('}', start);
-                if (end != std::string::npos) {
-                    std::string varName = str.substr(start + 1, end - start - 1);
-                    const char *varValue = getenv(varName.c_str());
-                    if (varValue) result += varValue;
-                    pos = end + 1;
-                    continue;
-                }
-            }
-
-            while (end < str.length() && (isalnum(str[end]) || str[end] == '_')) ++end;
-            std::string varName = str.substr(start, end - start);
-            const char *varValue = getenv(varName.c_str());
-            if (varValue) result += varValue;
-            pos = end;
-        } else {
-            result += str[pos];
-            ++pos;
-        }
-    }
-    return result;
 }
 
 void MujocoHumanoidWrapper::computeState() {

@@ -1,10 +1,10 @@
-#ifndef MUJOCO_ANT_WRAPPER_H
-#define MUJOCO_ANT_WRAPPER_H
+#ifndef MUJOCO_HALF_CHEETAH_WRAPPER_H
+#define MUJOCO_HALF_CHEETAH_WRAPPER_H
 
 #include <gegelati.h>
 #include "mujocoWrapper.h"
 
-class MujocoAntWrapper : public MujocoWrapper
+class MujocoHalfCheetahWrapper : public MujocoWrapper
 {
 protected:
 
@@ -22,29 +22,17 @@ protected:
 public:
 
     // Parameters
+    double forward_reward_weight = 1.0;
     double control_cost_weight_ = 0.5;
-	bool use_healthy_reward;
-    bool use_contact_forces_;
-    double contact_cost_weight_ = 5e-4;
-    double healthy_reward_ = 1.0;
-    bool terminate_when_unhealthy_ = true;
-    std::vector<double> healthy_z_range_;
-    std::vector<double> contact_force_range_;
     double reset_noise_scale_ = 0.1;
-    bool exclude_current_positions_from_observation_ = false;
+    bool exclude_current_positions_from_observation_ = true;
 
 
-	/**
-	* \brief Default constructor.
-	*
-	* Attributes angle and velocity are set to 0.0 by default.
-	*/
-	MujocoAntWrapper(const char *pXmlFile, bool useHealthyReward=true, bool useContactForce=false) :
-		MujocoWrapper(8, (exclude_current_positions_from_observation_) ? 27:29), xmlFile{pXmlFile}, use_healthy_reward{useHealthyReward}, use_contact_forces_{useContactForce}
+	MujocoHalfCheetahWrapper(const char *pXmlFile, bool exclude_current_positions_from_observation = true) :
+		MujocoWrapper(6, (exclude_current_positions_from_observation) ? 17:18), xmlFile{pXmlFile},
+		exclude_current_positions_from_observation_{exclude_current_positions_from_observation}
 		{
 			model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
-			healthy_z_range_ = {0.2, 1.0};
-			contact_force_range_ = {-1.0, 1.0};
 			initialize_simulation();
 
 		};
@@ -52,15 +40,14 @@ public:
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    MujocoAntWrapper(const MujocoAntWrapper &other) : MujocoWrapper(other), use_healthy_reward{other.use_healthy_reward}, use_contact_forces_{other.use_contact_forces_}
+    MujocoHalfCheetahWrapper(const MujocoHalfCheetahWrapper &other) : MujocoWrapper(other),
+	exclude_current_positions_from_observation_{other.exclude_current_positions_from_observation_}
 	{   
 		model_path_ = MujocoWrapper::ExpandEnvVars(other.xmlFile);
-		healthy_z_range_ = {0.2, 1.0};
-		contact_force_range_ = {-1.0, 1.0};
 		initialize_simulation();
     }
 
-    ~MujocoAntWrapper() {
+    ~MujocoHalfCheetahWrapper() {
         // Free visualization storage
         //mjv_freeScene(&scn_);
         //mjr_freeContext(&con_);
@@ -119,20 +106,13 @@ public:
 	*/
 	virtual bool isTerminal() const override;
 
-
-    double healthy_reward();
-
     double control_cost(std::vector<double>& action);
 
-    std::vector<double> contact_forces();
 
 	void computeState();
 
-    double contact_cost();
-
-    bool is_healthy() const;
 
 
 };
 
-#endif // !MUJOCOANTWRAPPER_H
+#endif // !MUJOCO_HALF_CHEETAH_WRAPPER_H

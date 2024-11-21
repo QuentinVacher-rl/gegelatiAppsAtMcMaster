@@ -1,8 +1,8 @@
-#ifndef MUJOCOHUMANOIDWRAPPER_H
-#define MUJOCOHUMANOIDWRAPPER_H
+#ifndef MUJOCO_HUMANOID_WRAPPER_H
+#define MUJOCO_HUMANOID_WRAPPER_H
 
 #include <gegelati.h>
-#include "../mujocoWrapper.h"
+#include "mujocoWrapper.h"
 
 class MujocoHumanoidWrapper : public MujocoWrapper
 {
@@ -36,7 +36,7 @@ public:
         exclude_current_positions_from_observation_{excludeCurrentPositionsFromObservation},
         MujocoWrapper(17, excludeCurrentPositionsFromObservation ? 376 : 378)
     {
-        model_path_ = ExpandEnvVars(xmlFile);
+        model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
         initialize_simulation();
     }
 
@@ -53,7 +53,7 @@ public:
         use_healthy_reward{other.use_healthy_reward},
         use_contact_forces_{other.use_contact_forces_}
     {
-        model_path_ = ExpandEnvVars(other.xmlFile);
+        model_path_ = MujocoWrapper::ExpandEnvVars(other.xmlFile);
         initialize_simulation();
     }
 
@@ -78,9 +78,8 @@ public:
     std::vector<double> contact_forces();
     double contact_cost();
     bool is_healthy() const;
-    std::string ExpandEnvVars(const std::string &str);
     std::array<double, 2> massCenter() const;
-    virtual void computeState() override;
+    virtual void computeState();
 };
 
-#endif // MUJOCOHUMANOIDWRAPPER_H
+#endif // MUJOCO_HUMANOID_WRAPPER_H

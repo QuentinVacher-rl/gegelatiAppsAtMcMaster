@@ -9,8 +9,7 @@
 #define _USE_MATH_DEFINES // To get M_PI
 #include <math.h>
 
-#include "mujocoEnvironment/mujocoAntWrapper.h"
-#include "mujocoEnvironment/mujocoHumanoidWrapper.h"
+#include "mujocoEnvironment/mujocoWrappers.h"
 #include "instructions.h"
 
 int main(int argc, char ** argv) {
@@ -26,6 +25,7 @@ int main(int argc, char ** argv) {
     strcpy(logsFolder, "logs");
     strcpy(paramFile, "params/params_0.json");
 	strcpy(usecase, "ant");
+    strcpy(xmlFile, "none");
     while((option = getopt(argc, argv, "s:p:l:x:h:c:u:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
@@ -34,16 +34,14 @@ int main(int argc, char ** argv) {
 			case 'u': strcpy(usecase, optarg); break;
 			case 'h': useHealthyReward = atoi(optarg); break;
 			case 'c': useContactForce = atoi(optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-logs logs Folder\'  \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
-        }
-    }
-    snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
-    while((option = getopt(argc, argv, "s:p:l:x:h:c:u:")) != -1){
-        switch (option) {
             case 'x': strcpy(xmlFile, optarg); break;
             default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-logs logs Folder\'  \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
+	if(strcmp(xmlFile, "none") == 0){
+    	snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
+	}
+
 
     std::cout << "Selected seed : " << seed << std::endl;
     std::cout << "Selected params: " << paramFile << std::endl;
@@ -68,6 +66,10 @@ int main(int argc, char ** argv) {
 	MujocoWrapper* mujocoLE = nullptr;
 	if(strcmp(usecase, "humanoid") == 0){
 		mujocoLE = new MujocoHumanoidWrapper(xmlFile, useHealthyReward, useContactForce);
+	} else if (strcmp(usecase, "half_cheetah") == 0) {
+		mujocoLE = new MujocoHalfCheetahWrapper(xmlFile);
+	} else if (strcmp(usecase, "reacher") == 0) {
+		mujocoLE = new MujocoReacherWrapper(xmlFile);
 	} else if (strcmp(usecase, "ant") == 0) {
 		mujocoLE = new MujocoAntWrapper(xmlFile, useHealthyReward, useContactForce);
 	} else {

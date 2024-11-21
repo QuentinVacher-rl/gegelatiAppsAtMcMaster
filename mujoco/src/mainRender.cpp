@@ -179,6 +179,7 @@ int main(int argc, char ** argv) {
     strcpy(paramFile, "params/params_0.json");
     strcpy(pathRenderVideo, "../logs/render");
 	strcpy(usecase, "ant");
+    strcpy(xmlFile, "none");
     while((option = getopt(argc, argv, "s:p:d:f:g:x:h:c:u:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
@@ -189,16 +190,14 @@ int main(int argc, char ** argv) {
 			case 'u': strcpy(usecase, optarg); break;
 			case 'h': useHealthyReward = atoi(optarg); break;
 			case 'c': useContactForce = atoi(optarg); break;
-            default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
-        }
-    }
-    snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
-    while((option = getopt(argc, argv, "s:p:d:f:g:x:h:c:u:")) != -1){
-        switch (option) {
             case 'x': strcpy(xmlFile, optarg); break;
             default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
+    if(strcmp(xmlFile, "none") == 0){
+    	snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
+	}
+
 
 	std::cout << "Start Mujoco Rendering application." << std::endl;
     // Create the instruction set for programs
@@ -218,6 +217,10 @@ int main(int argc, char ** argv) {
 	MujocoWrapper* mujocoLE = nullptr;
 	if(strcmp(usecase, "humanoid") == 0){
 		mujocoLE = new MujocoHumanoidWrapper(xmlFile, useHealthyReward, useContactForce);
+	} else if (strcmp(usecase, "half_cheetah") == 0) {
+		mujocoLE = new MujocoHalfCheetahWrapper(xmlFile);
+	} else if (strcmp(usecase, "reacher") == 0) {
+		mujocoLE = new MujocoReacherWrapper(xmlFile);
 	} else if (strcmp(usecase, "ant") == 0) {
 		mujocoLE = new MujocoAntWrapper(xmlFile, useHealthyReward, useContactForce);
 	} else {
@@ -264,12 +267,12 @@ int main(int argc, char ** argv) {
 
     TPG::TPGExecutionEngine tee(env, NULL);
 
-    mujocoLE->reset(seed, Learn::LearningMode::VALIDATION);
+    mujocoLE->reset(seed, Learn::LearningMode::TESTING);
 
     InitVisualization(mujocoLE->m_, mujocoLE->d_);
     StepVisualization(isRenderVideoSaved, pathRenderVideo);
 
-    std::vector<double> actions(8, 0);
+    std::vector<double> actions(mujocoLE->getNbContinuousAction(), 0);
     uint64_t nbActions = 0;
     while (!mujocoLE->isTerminal() && nbActions < params.maxNbActionsPerEval) {
         // Get the actions
@@ -285,6 +288,9 @@ int main(int argc, char ** argv) {
             actions[i] += abs(act);
             i++;
         }std::cout<<std::endl;
+        if(strcmp(usecase, "reacher") == 0){
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
         
 
         // Count actions

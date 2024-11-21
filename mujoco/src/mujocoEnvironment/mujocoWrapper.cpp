@@ -39,22 +39,9 @@ void MujocoWrapper::set_state(std::vector<double>& qpos, std::vector<double>& qv
 	mj_forward(m_, d_);
 }
 
-void MujocoWrapper::computeState(){
-	int index = 0;
-	for (int i = 0; i < m_->nq; i++) 
-	{
-		currentState.setDataAt(typeid(double), index, d_->qpos[i]);
-		index++;
-	}
-	for (int i = 0; i < m_->nv; i++) 
-	{
-		currentState.setDataAt(typeid(double), index, d_->qvel[i]);
-		index++;
-	}
-}
 
 void MujocoWrapper::do_simulation(std::vector<double>& ctrl, int n_frames) {
-	for (int i = 0; i < m_->nu; i++) {
+	for (int i = 0; i < m_->nu && i < static_cast<int>(ctrl.size()); i++) {
 		d_->ctrl[i] = ctrl[i];
 	}
 	for (int i = 0; i < n_frames; i++) {
@@ -64,4 +51,48 @@ void MujocoWrapper::do_simulation(std::vector<double>& ctrl, int n_frames) {
 	// computed unless there's a force sensor in the model. See https:
 	// // github.com/openai/gym/issues/1541
 	mj_rnePostConstraint(m_, d_);
+}
+
+
+std::string MujocoWrapper::ExpandEnvVars(const std::string &str) {
+	std::string result;
+	size_t pos = 0;
+
+	while (pos < str.length()) {
+		if (str[pos] == '$') {
+			size_t start = pos + 1;
+			size_t end = start;
+
+			// Handle ${VAR} format
+			if (start < str.length() && str[start] == '{') {
+				end = str.find('}', start);
+				if (end != std::string::npos) {
+					std::string varName =
+						str.substr(start + 1, end - start - 1);
+					const char *varValue = getenv(varName.c_str());
+					if (varValue) {
+						result += varValue;
+					}
+					pos = end + 1;
+					continue;
+				}
+			}
+
+			// Handle $VAR format
+			while (end < str.length() &&
+				(isalnum(str[end]) || str[end] == '_')) {
+				++end;
+			}
+			std::string varName = str.substr(start, end - start);
+			const char *varValue = getenv(varName.c_str());
+			if (varValue) {
+				result += varValue;
+			}
+			pos = end;
+		} else {
+			result += str[pos];
+			++pos;
+		}
+	}
+	return result;
 }

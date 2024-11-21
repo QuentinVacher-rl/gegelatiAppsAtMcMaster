@@ -1,5 +1,5 @@
-#ifndef MUJOCOWRAPPER_H
-#define MUJOCOWRAPPER_H
+#ifndef MUJOCO_WRAPPER_H
+#define MUJOCO_WRAPPER_H
 
 #include <gegelati.h>
 #include <mujoco.h>
@@ -61,10 +61,10 @@ public:
 
     void set_state(std::vector<double>& qpos, std::vector<double>& qvel);
 
-	virtual void computeState();
-
     void do_simulation(std::vector<double>& ctrl, int n_frames);
+
+	std::string ExpandEnvVars(const std::string &str);
 
 };
 
-#endif // !MUJOCOWRAPPER_H
+#endif // !MUJOCO_WRAPPER_H
