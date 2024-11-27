@@ -46,15 +46,16 @@ double RegressionWrapper::getState() const
 
 void RegressionWrapper::doActions(std::vector<double> actionsID)
 {
-	double value = std::sin(
+	/*double value = std::sin(
 		1 * std::pow(this->getState(), 2) -
 		2 * this->getState() + 1
-	);
-	 value = std::sin(
+	);*/
+	double value = std::sin(
 		this->getState() * this->getState() + this->getState()
 	);
 	if(isValidation)std::cout<<this->getState()<<","<<value<<","<<actionsID[0]<<std::endl;
 
+	// Multiply by 100 for more visibility
 	double reward = - (std::pow(actionsID[0] - value, 2)) * 100;
 	
 	this->nbActionsExecuted++;
