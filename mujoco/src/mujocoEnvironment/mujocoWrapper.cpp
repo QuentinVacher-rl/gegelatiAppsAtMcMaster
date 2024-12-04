@@ -12,6 +12,7 @@ std::vector<std::reference_wrapper<const Data::DataHandler>> MujocoWrapper::getD
 }
 
 
+
 void MujocoWrapper::initialize_simulation() {
 	// Load and compile model
 	char error[1000] = "Could not load binary model";
@@ -51,6 +52,12 @@ void MujocoWrapper::do_simulation(std::vector<double>& ctrl, int n_frames) {
 	// computed unless there's a force sensor in the model. See https:
 	// // github.com/openai/gym/issues/1541
 	mj_rnePostConstraint(m_, d_);
+}
+
+
+Data::PrimitiveTypeArray<double>& MujocoWrapper::getCurrentState()
+{
+	return currentState;
 }
 
 

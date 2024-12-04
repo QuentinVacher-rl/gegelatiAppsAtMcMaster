@@ -30,11 +30,11 @@ public:
                           bool useHealthyReward = true, 
                           bool useContactForce = false,
                           bool excludeCurrentPositionsFromObservation = false) :
+        MujocoWrapper(17, excludeCurrentPositionsFromObservation ? 376 : 378),
         xmlFile{pXmlFile},
         use_healthy_reward{useHealthyReward},
         use_contact_forces_{useContactForce},
-        exclude_current_positions_from_observation_{excludeCurrentPositionsFromObservation},
-        MujocoWrapper(17, excludeCurrentPositionsFromObservation ? 376 : 378)
+        exclude_current_positions_from_observation_{excludeCurrentPositionsFromObservation}
     {
         model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
         initialize_simulation();

@@ -172,14 +172,11 @@ int main(int argc, char ** argv) {
 	char xmlFile[150];
 	char usecase[150];
     uint64_t seed=0;
-	bool useHealthyReward = 1;
-	bool useContactForce = 0;
     
     strcpy(dotPath, "logs/out_best.0.p0.dot");
     strcpy(paramFile, "params/params_0.json");
     strcpy(pathRenderVideo, "../logs/render");
-	strcpy(usecase, "ant");
-    strcpy(xmlFile, "none");
+	strcpy(usecase, "multi");
     while((option = getopt(argc, argv, "s:p:d:f:g:x:h:c:u:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
@@ -187,16 +184,9 @@ int main(int argc, char ** argv) {
             case 'd': strcpy(dotPath, optarg); break;
             case 'g': strcpy(pathRenderVideo, optarg); break;
             case 'f': isRenderVideoSaved= atoi(optarg); break;
-			case 'u': strcpy(usecase, optarg); break;
-			case 'h': useHealthyReward = atoi(optarg); break;
-			case 'c': useContactForce = atoi(optarg); break;
-            case 'x': strcpy(xmlFile, optarg); break;
             default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-d dot path\' \'-f save or not video\' \'-g path for video saved\' \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
-    if(strcmp(xmlFile, "none") == 0){
-    	snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
-	}
 
 
 	std::cout << "Start Mujoco Rendering application." << std::endl;
@@ -212,27 +202,28 @@ int main(int argc, char ** argv) {
 	File::ParametersParser::loadParametersFromJson(paramFile, params);
 
 	std::cout << "Number of threads: " << params.nbThreads << std::endl;
+	
+
+	std::vector<MujocoWrapper*> wrappers;
+	std::vector<uint64_t> nbActionsWrappers;
+
+    strcpy(xmlFile, "mujoco_models/hopper.xml");
+	wrappers.push_back(new MujocoHopperWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
+
+    strcpy(xmlFile, "mujoco_models/walker2D.xml");
+	wrappers.push_back(new MujocoWalker2DWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
+
+    strcpy(xmlFile, "mujoco_models/half_cheetah.xml");
+	wrappers.push_back(new MujocoHalfCheetahWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
 
 	// Instantiate the LearningEnvironment
-	MujocoWrapper* mujocoLE = nullptr;
-	if(strcmp(usecase, "humanoid") == 0){
-		mujocoLE = new MujocoHumanoidWrapper(xmlFile, useHealthyReward, useContactForce);
-	} else if (strcmp(usecase, "half_cheetah") == 0) {
-		mujocoLE = new MujocoHalfCheetahWrapper(xmlFile);
-	} else if (strcmp(usecase, "hopper") == 0) {
-		mujocoLE = new MujocoHopperWrapper(xmlFile);
-	} else if (strcmp(usecase, "walker2D") == 0) {
-		mujocoLE = new MujocoWalker2DWrapper(xmlFile);
-	} else if (strcmp(usecase, "reacher") == 0) {
-		mujocoLE = new MujocoReacherWrapper(xmlFile);
-	} else if (strcmp(usecase, "ant") == 0) {
-		mujocoLE = new MujocoAntWrapper(xmlFile, useHealthyReward, useContactForce);
-	} else {
-		throw std::runtime_error("Use case not found");
-	}
+	MultiMujocoWrapper* mujocoLE = new MultiMujocoWrapper(wrappers, nbActionsWrappers);
 
 	// Instantiate and init the learning agent
-	Learn::ParallelLearningAgent la(*mujocoLE, set, params);
+	MultiMujocoLearningAgent la(*mujocoLE, set, params);
 	la.init(seed);
 
     auto &tpg = *la.getTPGGraph();
@@ -271,13 +262,15 @@ int main(int argc, char ** argv) {
 
     TPG::TPGExecutionEngine tee(env, NULL);
 
+    uint64_t currentWrapper = 0;
     mujocoLE->reset(seed, Learn::LearningMode::TESTING);
 
-    InitVisualization(mujocoLE->m_, mujocoLE->d_);
+    InitVisualization(mujocoLE->getWrapperAt(currentWrapper)->m_, mujocoLE->getWrapperAt(currentWrapper)->d_);
     StepVisualization(isRenderVideoSaved, pathRenderVideo);
 
     std::vector<double> actions(mujocoLE->getNbContinuousAction(), 0);
     uint64_t nbActions = 0;
+    uint64_t nbActionsThisWrapper = 0;
     while (!mujocoLE->isTerminal() && nbActions < params.maxNbActionsPerEval) {
         // Get the actions
         std::vector<double> actionsID =
@@ -299,15 +292,30 @@ int main(int argc, char ** argv) {
 
         // Count actions
         nbActions++;
+        nbActionsThisWrapper++;
         StepVisualization(isRenderVideoSaved, pathRenderVideo);
+
+        if(nbActionsThisWrapper == nbActionsWrappers.at(currentWrapper) || mujocoLE->getWrapperAt(currentWrapper)->isTerminal()){
+            
+            
+            std::cout<<"Score: "<<mujocoLE->getWrapperAt(currentWrapper)->getScore()<<std::endl;;
+            std::cout<<"Summup actions: ";
+            for(auto act: actions){
+                std::cout<<act/(double)nbActions<<"-";
+            }std::cout<<std::endl;
+
+            std::fill(actions.begin(), actions.end(), 0.0);
+            currentWrapper++;
+            nbActionsThisWrapper = 0;
+            if(currentWrapper < wrappers.size()){
+                InitVisualization(mujocoLE->getWrapperAt(currentWrapper)->m_, mujocoLE->getWrapperAt(currentWrapper)->d_);
+                StepVisualization(isRenderVideoSaved, pathRenderVideo);
+            }
+            
+        }
 
     }
     
-    std::cout<<"Score: "<<mujocoLE->getScore()<<std::endl;;
-    std::cout<<"Summup actions: ";
-    for(auto act: actions){
-        std::cout<<act/(double)nbActions<<"-";
-    }std::cout<<std::endl;
 
     if(isRenderVideoSaved){
         // Change size of images and save

@@ -16,6 +16,7 @@ class MujocoWrapper : public Learn::LearningEnvironment
 protected:
 
 	Data::PrimitiveTypeArray<double> currentState;
+	uint64_t stateSize;
 
 public:
 
@@ -27,7 +28,7 @@ public:
 	*/
 	MujocoWrapper(uint64_t nbActions, uint64_t stateSize) :
 		LearningEnvironment(nbActions, 0, false, nbActions),
-		currentState{ stateSize }
+		currentState{ stateSize }, stateSize{stateSize}
 	{};
 
 	/**
@@ -36,7 +37,7 @@ public:
 	* Default copy constructor since all attributes are trivially copyable.
 	*/
 	MujocoWrapper(const MujocoWrapper& other) : LearningEnvironment(other.nbContinuousAction, 0, false, other.nbContinuousAction),
-		currentState{other.currentState} {}
+		currentState{other.currentState}, stateSize{other.stateSize} {}
 	
 
 	/// Inherited via LearningEnvironment
@@ -63,7 +64,13 @@ public:
 
     void do_simulation(std::vector<double>& ctrl, int n_frames);
 
+	Data::PrimitiveTypeArray<double>& getCurrentState();
+	uint64_t getStateSize(){
+		return stateSize;
+	}
+
 	std::string ExpandEnvVars(const std::string &str);
+
 
 };
 

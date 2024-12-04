@@ -1,10 +1,10 @@
-#ifndef MUJOCO_HALF_CHEETAH_WRAPPER_H
-#define MUJOCO_HALF_CHEETAH_WRAPPER_H
+#ifndef MUJOCO_WALKER2D_WRAPPER_H
+#define MUJOCO_WALKER2D_WRAPPER_H
 
 #include <gegelati.h>
 #include "mujocoWrapper.h"
 
-class MujocoHalfCheetahWrapper : public MujocoWrapper
+class MujocoWalker2DWrapper : public MujocoWrapper
 {
 protected:
 
@@ -17,38 +17,54 @@ protected:
 	/// Number of actions since the last reset
 	uint64_t nbActionsExecuted = 0;
 
-	const std::string xmlFile;
-
 public:
 
-    // Parameters
-    double forward_reward_weight = 1.0;
-    double control_cost_weight_ = 0.5;
-    double reset_noise_scale_ = 0.1;
-    bool exclude_current_positions_from_observation_ = true;
+	
 
 
-	MujocoHalfCheetahWrapper(const char *pXmlFile, bool exclude_current_positions_from_observation = true) :
-		MujocoWrapper(6, (exclude_current_positions_from_observation) ? 17:18), xmlFile{pXmlFile},
+	const std::string xmlFile;
+	// Parameters
+	double forward_reward_weight = 1.0;
+	double control_cost_weight_ = 1e-3;
+	double healthy_reward_ = 1.0;
+	bool terminate_when_unhealthy_ = true;
+	std::vector<double> healthy_z_range_;
+	std::vector<double> healthy_angle_range_;
+	double reset_noise_scale_ = 5e-3;
+	bool exclude_current_positions_from_observation_ = true;
+
+
+
+	/**
+	* \brief Default constructor.
+	*
+	* Attributes angle and velocity are set to 0.0 by default.
+	*/
+	MujocoWalker2DWrapper(const char *pXmlFile, bool exclude_current_positions_from_observation = true) :
+		MujocoWrapper(6, (exclude_current_positions_from_observation) ? 17:18), 
+		xmlFile{pXmlFile},
 		exclude_current_positions_from_observation_{exclude_current_positions_from_observation}
 		{
 			model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
+			healthy_z_range_ = {0.2, 2};
+			healthy_angle_range_ = {-1.0, 1.0};
 			initialize_simulation();
-
 		};
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    MujocoHalfCheetahWrapper(const MujocoHalfCheetahWrapper &other) : MujocoWrapper(other),
+    MujocoWalker2DWrapper(const MujocoWalker2DWrapper &other) : MujocoWrapper(other), 
 	exclude_current_positions_from_observation_{other.exclude_current_positions_from_observation_},
 	xmlFile{other.xmlFile}
-	{   
+	{
 		model_path_ = MujocoWrapper::ExpandEnvVars(other.xmlFile);
+		healthy_z_range_ = {0.2, 2};
+		healthy_angle_range_ = {-1.0, 1.0};
 		initialize_simulation();
     }
 
-    ~MujocoHalfCheetahWrapper() {
+    ~MujocoWalker2DWrapper() {
         // Free visualization storage
         //mjv_freeScene(&scn_);
         //mjr_freeContext(&con_);
@@ -107,13 +123,16 @@ public:
 	*/
 	virtual bool isTerminal() const override;
 
-    double control_cost(std::vector<double>& action);
 
+    double healthy_reward();
 
 	void computeState();
 
+    double control_cost(std::vector<double>& action);
+
+    bool is_healthy() const;
 
 
 };
 
-#endif // !MUJOCO_HALF_CHEETAH_WRAPPER_H
+#endif // !MUJOCO_WALKER2D_WRAPPER_H

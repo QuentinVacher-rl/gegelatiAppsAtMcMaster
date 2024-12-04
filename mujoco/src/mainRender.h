@@ -7,6 +7,7 @@
 
 
 #include "mujocoEnvironment/mujocoWrappers.h"
+#include "mujocoLearningAgent.h"
 #include <gegelati.h>
 #include "instructions.h"
 

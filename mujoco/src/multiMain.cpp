@@ -10,6 +10,7 @@
 #include <math.h>
 
 #include "mujocoEnvironment/mujocoWrappers.h"
+#include "mujocoLearningAgent.h"
 #include "instructions.h"
 
 int main(int argc, char ** argv) {
@@ -18,29 +19,19 @@ int main(int argc, char ** argv) {
     uint64_t seed = 0;
     char paramFile[1500];
 	char logsFolder[150];
-	char xmlFile[150];
 	char usecase[150];
-	bool useHealthyReward = 1;
-	bool useContactForce = 0;
+	char xmlFile[150];
     strcpy(logsFolder, "logs");
+    strcpy(usecase, "multi");
     strcpy(paramFile, "params/params_0.json");
-	strcpy(usecase, "ant");
-    strcpy(xmlFile, "none");
     while((option = getopt(argc, argv, "s:p:l:x:h:c:u:")) != -1){
         switch (option) {
             case 's': seed= atoi(optarg); break;
             case 'p': strcpy(paramFile, optarg); break;
             case 'l': strcpy(logsFolder, optarg); break;
-			case 'u': strcpy(usecase, optarg); break;
-			case 'h': useHealthyReward = atoi(optarg); break;
-			case 'c': useContactForce = atoi(optarg); break;
-            case 'x': strcpy(xmlFile, optarg); break;
             default: std::cout << "Unrecognised option. Valid options are \'-s seed\' \'-p paramFile.json\' \'-u useCase\' \'-logs logs Folder\'  \'-x xmlFile\' \'-h useHealthyReward\' \'-c useContactForce\'." << std::endl; exit(1);
         }
     }
-	if(strcmp(xmlFile, "none") == 0){
-    	snprintf(xmlFile, sizeof(xmlFile), "mujoco_models/%s.xml", usecase);
-	}
 
 
     std::cout << "Selected seed : " << seed << std::endl;
@@ -68,29 +59,31 @@ int main(int argc, char ** argv) {
 	// settings such as thread count of number of actions.
 	char jsonFilePath[200];  // Assurez-vous que ce soit assez grand pour contenir les deux parties concaténées.
 	snprintf(jsonFilePath, sizeof(jsonFilePath), "%s/exported_params.p%d.json", logsFolder, indexParam);
+	
+	std::cout<<"Creating multiple wrappers"<<std::endl;
+	std::vector<MujocoWrapper*> wrappers;
+	std::vector<uint64_t> nbActionsWrappers;
+
+    strcpy(xmlFile, "mujoco_models/hopper.xml");
+	wrappers.push_back(new MujocoHopperWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
+
+    strcpy(xmlFile, "mujoco_models/walker2D.xml");
+	wrappers.push_back(new MujocoWalker2DWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
+
+    strcpy(xmlFile, "mujoco_models/half_cheetah.xml");
+	wrappers.push_back(new MujocoHalfCheetahWrapper(xmlFile));
+	nbActionsWrappers.push_back(params.maxNbActionsPerEval/3);
 
 	// Instantiate the LearningEnvironment
-	MujocoWrapper* mujocoLE = nullptr;
-	if(strcmp(usecase, "humanoid") == 0){
-		mujocoLE = new MujocoHumanoidWrapper(xmlFile, useHealthyReward, useContactForce);
-	} else if (strcmp(usecase, "half_cheetah") == 0) {
-		mujocoLE = new MujocoHalfCheetahWrapper(xmlFile);
-	} else if (strcmp(usecase, "hopper") == 0) {
-		mujocoLE = new MujocoHopperWrapper(xmlFile);
-	} else if (strcmp(usecase, "walker2D") == 0) {
-		mujocoLE = new MujocoWalker2DWrapper(xmlFile);
-	} else if (strcmp(usecase, "reacher") == 0) {
-		mujocoLE = new MujocoReacherWrapper(xmlFile);
-	} else if (strcmp(usecase, "ant") == 0) {
-		mujocoLE = new MujocoAntWrapper(xmlFile, useHealthyReward, useContactForce);
-	} else {
-		throw std::runtime_error("Use case not found");
-	}
+	std::cout<<"Creating MultiMujocoWrapper"<<std::endl;
+	MultiMujocoWrapper* mujocoLE = new MultiMujocoWrapper(wrappers, nbActionsWrappers);
 
 	std::cout << "Number of threads: " << params.nbThreads << std::endl;
 
 	// Instantiate and init the learning agent
-	Learn::ParallelLearningAgent la(*mujocoLE, set, params);
+	MultiMujocoLearningAgent la(*mujocoLE, set, params);
 	la.init(seed);
 
 

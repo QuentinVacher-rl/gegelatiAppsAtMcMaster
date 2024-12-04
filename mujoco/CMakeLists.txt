@@ -10,7 +10,10 @@ cmake_minimum_required(VERSION 3.12.4)
 
 set (PROJECT_NAME mujoco)
 
+set (PROJECT_MULTI_NAME multiMujoco)
 set (RENDER_NAME renderMujoco)
+set (RENDER_MULTI_NAME renderMultiMujoco)
+set (PROJECT_ES_NAME mujocoES)
 
 project(${PROJECT_NAME})
 
@@ -113,6 +116,9 @@ file(GLOB_RECURSE
 
 list(REMOVE_ITEM
 	mujoco_files
+	${CMAKE_SOURCE_DIR}/src/mainES.cpp
+	${CMAKE_SOURCE_DIR}/src/multiMain.cpp
+	${CMAKE_SOURCE_DIR}/src/multiMainRender.cpp
 	${CMAKE_SOURCE_DIR}/src/mainRender.cpp
 	${CMAKE_SOURCE_DIR}/src/mainRender.h)
 
@@ -121,11 +127,45 @@ add_executable(${PROJECT_NAME} ${mujoco_files})
 target_link_libraries(${PROJECT_NAME} ${GEGELATI_LIBRARIES}  ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY} mujoco210 ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 
+
+list(REMOVE_ITEM
+	mujoco_files
+	${CMAKE_SOURCE_DIR}/src/main.cpp)
+
+
+	
+# Liste des fichiers source
+list(APPEND mujoco_files
+	${CMAKE_SOURCE_DIR}/src/multiMain.cpp
+	)
+
+include_directories(${GEGELATI_INCLUDE_DIRS}  ${SDL2_INCLUDE_DIR} ${SDL2IMAGE_INCLUDE_DIR} ${SDL2TTF_INCLUDE_DIR} mujoco210)
+add_executable(${PROJECT_MULTI_NAME} ${mujoco_files})
+target_link_libraries(${PROJECT_MULTI_NAME} ${GEGELATI_LIBRARIES}  ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY} mujoco210 ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_compile_definitions(${PROJECT_MULTI_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
+list(REMOVE_ITEM
+	mujoco_files
+	${CMAKE_SOURCE_DIR}/src/multiMain.cpp)
+
+
+# Liste des fichiers source
+list(APPEND mujoco_files
+	${CMAKE_SOURCE_DIR}/src/mainES.cpp
+)
+
+include_directories(${GEGELATI_INCLUDE_DIRS}  ${SDL2_INCLUDE_DIR} ${SDL2IMAGE_INCLUDE_DIR} ${SDL2TTF_INCLUDE_DIR} mujoco210)
+add_executable(${PROJECT_ES_NAME} ${mujoco_files})
+target_link_libraries(${PROJECT_ES_NAME} ${GEGELATI_LIBRARIES}  ${SDL2_LIBRARY} ${SDL2IMAGE_LIBRARY} ${SDL2TTF_LIBRARY} mujoco210 ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES})
+target_compile_definitions(${PROJECT_ES_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+
 if(${RENDERING})
 
 	list(REMOVE_ITEM
 		mujoco_files
-		${CMAKE_SOURCE_DIR}/src/main.cpp)
+		${CMAKE_SOURCE_DIR}/src/mainES.cpp)
 
 
 	# Liste des fichiers source
@@ -166,4 +206,38 @@ if(${RENDERING})
 
 	# Définition d'une macro avec le répertoire racine du projet
 	target_compile_definitions(${RENDER_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
+
+	
+	list(REMOVE_ITEM
+	mujoco_files
+		${CMAKE_SOURCE_DIR}/src/mainRender.cpp)
+
+
+	# Liste des fichiers source
+	list(APPEND mujoco_files
+		${CMAKE_SOURCE_DIR}/src/multiMainRender.cpp
+	)
+
+	# Création de l'exécutable
+	add_executable(${RENDER_MULTI_NAME} ${mujoco_files})
+
+	# Lien des bibliothèques
+	target_link_libraries(${RENDER_MULTI_NAME} 
+		mujoco210 
+		glfw3 
+		${GLEW_LIBRARIES} 
+		${OPENGL_LIBRARIES} 
+		${GEGELATI_LIBRARIES}  
+		${SDL2_LIBRARY} 
+		${SDL2IMAGE_LIBRARY} 
+		${SDL2TTF_LIBRARY} 
+		X11 
+		Xrandr 
+		Xxf86vm
+		Xinerama
+		Xcursor
+	)
+
+	# Définition d'une macro avec le répertoire racine du projet
+	target_compile_definitions(${RENDER_MULTI_NAME} PRIVATE ROOT_DIR="${CMAKE_SOURCE_DIR}")
 endif()
