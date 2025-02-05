@@ -77,8 +77,10 @@ int main(int argc, char ** argv) {
 		mujocoLE = new MujocoHalfCheetahWrapper(xmlFile);
 	} else if (strcmp(usecase, "hopper") == 0) {
 		mujocoLE = new MujocoHopperWrapper(xmlFile);
-	} else if (strcmp(usecase, "walker2D") == 0) {
+	} else if (strcmp(usecase, "walker2d") == 0) {
 		mujocoLE = new MujocoWalker2DWrapper(xmlFile);
+	} else if (strcmp(usecase, "inverted_double_pendulum") == 0) {
+		mujocoLE = new MujocoDoublePendulumWrapper(xmlFile);
 	} else if (strcmp(usecase, "reacher") == 0) {
 		mujocoLE = new MujocoReacherWrapper(xmlFile);
 	} else if (strcmp(usecase, "ant") == 0) {

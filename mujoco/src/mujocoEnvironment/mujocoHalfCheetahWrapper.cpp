@@ -90,7 +90,7 @@ void MujocoHalfCheetahWrapper::computeState(){
 	if(exclude_current_positions_from_observation_){
 		reduction = 1;
 	}
-	for (int i = 0; i < m_->nq - reduction; i++) 
+	for (int i = reduction; i < m_->nq; i++) 
 	{
 		currentState.setDataAt(typeid(double), index, d_->qpos[i]);
 		index++;

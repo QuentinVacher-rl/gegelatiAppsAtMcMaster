@@ -19,7 +19,7 @@ fi
 
 # Exporter la variable DISPLAY
 export DISPLAY=:0
-echo "DISPLAY set to :0"
+echo "DISPLAY set to :0 with export DISPLAY=:0"
 
 # Message indiquant que le script est terminé
 echo "X server launched and DISPLAY is set."

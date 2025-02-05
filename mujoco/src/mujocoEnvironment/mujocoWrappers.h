@@ -4,6 +4,7 @@
 #include "mujocoHalfCheetahWrapper.h"
 #include "mujocoHopperWrapper.h"
 #include "mujocoWalker2DWrapper.h"
+#include "mujocoDoublePendulumWrapper.h"
 
 #include "multiMujocoWrapper.h"
 

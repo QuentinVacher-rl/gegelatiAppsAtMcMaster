@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "MujocoWalker2DWrapper.h"
+#include "mujocoWalker2DWrapper.h"
 
 
 
@@ -112,7 +112,7 @@ void MujocoWalker2DWrapper::computeState(){
 		reduction = 1;
 	}
 
-	for (int i = 0; i < m_->nq - reduction; i++) 
+	for (int i = reduction; i < m_->nq; i++) 
 	{
 		currentState.setDataAt(typeid(double), index, d_->qpos[i]);
 		index++;

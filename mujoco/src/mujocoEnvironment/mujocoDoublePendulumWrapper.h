@@ -1,10 +1,10 @@
-#ifndef MUJOCO_WALKER2D_WRAPPER_H
-#define MUJOCO_WALKER2D_WRAPPER_H
+#ifndef MUJOCO_DOUBLE_PENDULUM_WRAPPER_H
+#define MUJOCO_DOUBLE_PENDULUM_WRAPPER_H
 
 #include <gegelati.h>
 #include "mujocoWrapper.h"
 
-class MujocoWalker2DWrapper : public MujocoWrapper
+class MujocoDoublePendulumWrapper : public MujocoWrapper
 {
 protected:
 
@@ -24,14 +24,7 @@ public:
 
 	const std::string xmlFile;
 	// Parameters
-	double forward_reward_weight = 1.0;
-	double control_cost_weight_ = 1e-3;
-	double healthy_reward_ = 1.0;
-	bool terminate_when_unhealthy_ = true;
-	std::vector<double> healthy_z_range_;
-	std::vector<double> healthy_angle_range_;
 	double reset_noise_scale_ = 5e-3;
-	bool exclude_current_positions_from_observation_ = true;
 
 
 
@@ -40,31 +33,25 @@ public:
 	*
 	* Attributes angle and velocity are set to 0.0 by default.
 	*/
-	MujocoWalker2DWrapper(const char *pXmlFile, bool exclude_current_positions_from_observation = true) :
-		MujocoWrapper(6, (exclude_current_positions_from_observation) ? 17:18), 
-		xmlFile{pXmlFile},
-		exclude_current_positions_from_observation_{exclude_current_positions_from_observation}
+	MujocoDoublePendulumWrapper(const char *pXmlFile) :
+		MujocoWrapper(1, 11), 
+		xmlFile{pXmlFile}
 		{
 			model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
-			healthy_z_range_ = {0.8, 2};
-			healthy_angle_range_ = {-1.0, 1.0};
 			initialize_simulation();
 		};
 
     /**
     * \brief Copy constructor for the armLearnWrapper.
     */ 
-    MujocoWalker2DWrapper(const MujocoWalker2DWrapper &other) : MujocoWrapper(other), 
-	exclude_current_positions_from_observation_{other.exclude_current_positions_from_observation_},
+    MujocoDoublePendulumWrapper(const MujocoDoublePendulumWrapper &other) : MujocoWrapper(other),
 	xmlFile{other.xmlFile}
 	{
-		model_path_ = MujocoWrapper::ExpandEnvVars(other.xmlFile);
-		healthy_z_range_ = {0.8, 2};
-		healthy_angle_range_ = {-1.0, 1.0};
+		model_path_ = MujocoWrapper::ExpandEnvVars(xmlFile);
 		initialize_simulation();
     }
 
-    ~MujocoWalker2DWrapper() {
+    ~MujocoDoublePendulumWrapper() {
         // Free visualization storage
         //mjv_freeScene(&scn_);
         //mjr_freeContext(&con_);
@@ -124,15 +111,10 @@ public:
 	virtual bool isTerminal() const override;
 
 
-    double healthy_reward();
 
 	void computeState();
-
-    double control_cost(std::vector<double>& action);
-
-    bool is_healthy() const;
 
 
 };
 
-#endif // !MUJOCO_WALKER2D_WRAPPER_H
+#endif // !MUJOCO_DOUBLE_PENDULUM_WRAPPER_H
